@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapa de Oportunidades con IA</title>
+  <meta name="description" content="Descubre y comparte oportunidades de negocio detectadas con inteligencia artificial en ciudades del mundo." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-deep:       #0a0b14;
+      --bg-card:       rgba(255,255,255,0.05);
+      --bg-card-hover: rgba(255,255,255,0.09);
+      --border:        rgba(255,255,255,0.10);
+      --border-focus:  rgba(99,102,241,0.6);
+      --accent:        #6366f1;
+      --accent-light:  #818cf8;
+      --accent-glow:   rgba(99,102,241,0.35);
+      --success:       #10b981;
+      --warning:       #f59e0b;
+      --like-active:   #f43f5e;
+      --text-primary:  #f1f5f9;
+      --text-secondary:#94a3b8;
+      --text-muted:    #64748b;
+      --radius:        14px;
+      --radius-sm:     8px;
+      --shadow:        0 4px 32px rgba(0,0,0,0.4);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(99,102,241,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(16,185,129,0.08) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      position: relative;
+      z-index: 1;
+    }
+    header {
+      padding: 28px 0 20px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,11,20,0.8);
+      backdrop-filter: blur(16px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-icon {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--accent), #10b981);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .logo h1 {
+      font-size: 1.25rem; font-weight: 700;
+      background: linear-gradient(90deg, #f1f5f9, var(--accent-light));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .logo span {
+      display: block; font-size: 0.72rem; font-weight: 400;
+      color: var(--text-muted); -webkit-text-fill-color: var(--text-muted);
+    }
+    .btn-publish {
+      background: linear-gradient(135deg, var(--accent), #818cf8);
+      color: #fff; border: none; padding: 10px 22px; border-radius: 10px;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer;
+      transition: transform 0.18s, box-shadow 0.18s;
+      box-shadow: 0 0 18px var(--accent-glow); font-family: inherit;
+    }
+    .btn-publish:hover { transform: translateY(-2px); box-shadow: 0 0 28px var(--accent-glow); }
+    .btn-publish:active { transform: scale(0.97); }
+    .stats-bar {
+      display: flex; gap: 24px; padding: 16px 0;
+      border-bottom: 1px solid var(--border); flex-wrap: wrap;
+    }
+    .stat { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-secondary); }
+    .stat strong { color: var(--text-primary); font-size: 1.1rem; }
+    .stat-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--success); box-shadow: 0 0 8px var(--success);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.6; transform: scale(1.3); }
+    }
+    .filters-section { padding: 20px 0; }
+    .filters-label {
+      font-size: 0.78rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 12px;
+    }
+    .filters-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .filter-input {
+      background: var(--bg-card); border: 1px solid var(--border);
+      color: var(--text-primary); padding: 9px 14px; border-radius: var(--radius-sm);
+      font-size: 0.88rem; font-family: inherit; outline: none;
+      transition: border-color 0.2s, background 0.2s; min-width: 140px;
+    }
+    .filter-input::placeholder { color: var(--text-muted); }
+    .filter-input:focus { border-color: var(--border-focus); background: rgba(255,255,255,0.08); }
+    .btn-clear {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 9px 16px; border-radius: var(--radius-sm);
+      font-size: 0.85rem; cursor: pointer; font-family: inherit; transition: all 0.2s;
+    }
+    .btn-clear:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+    .section-heading {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+    }
+    .section-heading h2 { font-size: 1.1rem; font-weight: 600; }
+    .count-badge {
+      background: var(--bg-card); border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem;
+    }
+    .cards-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px; padding-bottom: 60px;
+    }
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 22px;
+      transition: transform 0.22s, border-color 0.22s, background 0.22s, box-shadow 0.22s;
+      backdrop-filter: blur(8px); position: relative; overflow: hidden;
+      animation: fadeInUp 0.4s ease both;
+    }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), #10b981); opacity: 0; transition: opacity 0.22s;
+    }
+    .card:hover {
+      transform: translateY(-4px); border-color: rgba(99,102,241,0.3);
+      background: var(--bg-card-hover); box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+    }
+    .card:hover::before { opacity: 1; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .card-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 10px; margin-bottom: 14px;
+    }
+    .card-name { font-size: 1rem; font-weight: 700; line-height: 1.3; }
+    .card-location { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
+    .category-badge {
+      background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3);
+      color: var(--accent-light); padding: 3px 10px; border-radius: 20px;
+      font-size: 0.72rem; font-weight: 500; white-space: nowrap; flex-shrink: 0;
+    }
+    .card-section { margin-bottom: 12px; }
+    .card-section-label {
+      font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 4px;
+    }
+    .card-section-text { font-size: 0.87rem; color: var(--text-secondary); line-height: 1.5; }
+    .ai-solution-text { color: #a5f3d0; font-size: 0.87rem; line-height: 1.5; }
+    .card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); gap: 10px;
+    }
+    .potential-badge { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 600; }
+    .potential-badge.alto  { color: var(--success); }
+    .potential-badge.medio { color: var(--warning); }
+    .potential-badge.bajo  { color: var(--text-muted); }
+    .potential-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .potential-badge.alto  .potential-dot { background: var(--success); }
+    .potential-badge.medio .potential-dot { background: var(--warning); }
+    .potential-badge.bajo  .potential-dot { background: var(--text-muted); }
+    .card-date { font-size: 0.73rem; color: var(--text-muted); }
+    .btn-like {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.25);
+      color: #fb7185; padding: 6px 14px; border-radius: 20px;
+      font-size: 0.82rem; font-weight: 600; cursor: pointer;
+      font-family: inherit; transition: all 0.2s;
+    }
+    .btn-like:hover { background: rgba(244,63,94,0.2); border-color: rgba(244,63,94,0.5); transform: scale(1.05); }
+    .btn-like:active { transform: scale(0.95); }
+    .btn-like.liked { background: rgba(244,63,94,0.25); border-color: var(--like-active); color: var(--like-active); }
+    .like-heart { font-size: 14px; transition: transform 0.2s; }
+    .btn-like:hover .like-heart { transform: scale(1.3); }
+    .empty-state { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .empty-state .empty-icon { font-size: 3rem; margin-bottom: 16px; }
+    .loading-spinner { grid-column: 1 / -1; display: flex; justify-content: center; padding: 60px; }
+    .spinner {
+      width: 40px; height: 40px; border: 3px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+      z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: all; }
+    .modal {
+      background: #13141f; border: 1px solid var(--border); border-radius: 20px;
+      width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; padding: 32px;
+      transform: scale(0.95) translateY(10px); transition: transform 0.25s;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    }
+    .modal-overlay.active .modal { transform: scale(1) translateY(0); }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .modal-title { font-size: 1.15rem; font-weight: 700; }
+    .modal-close {
+      background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary);
+      width: 32px; height: 32px; border-radius: 8px; font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .modal-close:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-label { font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; }
+    .form-input, .form-select, .form-textarea {
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      color: var(--text-primary); padding: 10px 14px; border-radius: var(--radius-sm);
+      font-size: 0.9rem; font-family: inherit; outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .form-input::placeholder, .form-textarea::placeholder { color: var(--text-muted); }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--border-focus); background: rgba(255,255,255,0.08); }
+    .form-select { cursor: pointer; }
+    .form-select option { background: #13141f; }
+    .form-textarea { resize: vertical; min-height: 80px; }
+    .btn-submit {
+      width: 100%; margin-top: 6px;
+      background: linear-gradient(135deg, var(--accent), #818cf8);
+      color: #fff; border: none; padding: 13px; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: all 0.2s; box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 0 30px var(--accent-glow); }
+    .btn-submit:active { transform: scale(0.98); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; background: #1e1f2e;
+      border: 1px solid var(--border); color: var(--text-primary); padding: 14px 20px;
+      border-radius: 12px; font-size: 0.9rem; font-weight: 500; z-index: 2000;
+      box-shadow: var(--shadow); transform: translateY(80px); opacity: 0;
+      transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1); max-width: 320px;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: rgba(16,185,129,0.4); }
+    .toast.error { border-color: rgba(239,68,68,0.4); }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.full { grid-column: 1; }
+      .modal { padding: 22px; }
+      .header-inner { flex-direction: column; align-items: flex-start; }
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">&#x1F5FA;&#xFE0F;</div>
+        <div>
+          <h1>Mapa de Oportunidades con IA</h1>
+          <span>Descubre y comparte negocios del futuro</span>
+        </div>
+      </div>
+      <button class="btn-publish" id="btnOpenModal" onclick="openModal()">+ Publicar oportunidad</button>
+    </div>
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-dot"></div><span>Base de datos activa</span></div>
+      <div class="stat"><strong id="totalCount">&#8212;</strong><span>oportunidades</span></div>
+      <div class="stat"><strong id="totalLikes">&#8212;</strong><span>likes totales</span></div>
+      <div class="stat"><strong id="totalCities">&#8212;</strong><span>ciudades</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="filters-section">
+    <div class="filters-label">&#x1F50D; Filtrar oportunidades</div>
+    <div class="filters-row">
+      <input type="text" class="filter-input" id="filterCity"     placeholder="Ciudad..."          oninput="applyFilters()" />
+      <input type="text" class="filter-input" id="filterCountry"  placeholder="Pa&#237;s..."           oninput="applyFilters()" />
+      <select class="filter-input" id="filterCategory" onchange="applyFilters()">
+        <option value="">Todas las categor&#237;as</option>
+        <option value="Salud">&#x1F3E5; Salud</option>
+        <option value="Educaci&#243;n">&#x1F4DA; Educaci&#243;n</option>
+        <option value="Log&#237;stica">&#x1F69A; Log&#237;stica</option>
+        <option value="Fintech">&#x1F4B3; Fintech</option>
+        <option value="Retail">&#x1F6CD;&#xFE0F; Retail</option>
+        <option value="Agricultura">&#x1F33E; Agricultura</option>
+        <option value="Turismo">&#x2708;&#xFE0F; Turismo</option>
+        <option value="Energ&#237;a">&#x26A1; Energ&#237;a</option>
+        <option value="Construcci&#243;n">&#x1F3D7;&#xFE0F; Construcci&#243;n</option>
+        <option value="Otro">&#x1F4A1; Otro</option>
+      </select>
+      <button class="btn-clear" onclick="clearFilters()">&#x2715; Limpiar</button>
+    </div>
+  </div>
+
+  <div class="section-heading">
+    <h2>Oportunidades detectadas</h2>
+    <div class="count-badge" id="countBadge">...</div>
+  </div>
+
+  <div class="cards-grid" id="cardsGrid">
+    <div class="loading-spinner"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">&#x1F680; Nueva oportunidad</div>
+      <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+    </div>
+    <form id="opportunityForm" onsubmit="submitOpportunity(event)">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">Nombre de la oportunidad *</label>
+          <input id="fname" class="form-input" type="text" placeholder="Ej: Diagn&#243;stico m&#233;dico con IA en zonas rurales" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ciudad *</label>
+          <input id="fcity" class="form-input" type="text" placeholder="Ej: Bogot&#225;" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pa&#237;s *</label>
+          <input id="fcountry" class="form-input" type="text" placeholder="Ej: Colombia" required />
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Problema detectado *</label>
+          <textarea id="fproblem" class="form-textarea" placeholder="Describe el problema que existe en esa ciudad..." required></textarea>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Soluci&#243;n con IA *</label>
+          <textarea id="fsolution" class="form-textarea" placeholder="&#191;C&#243;mo resuelve la IA este problema?" required></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Categor&#237;a *</label>
+          <select id="fcategory" class="form-select" required>
+            <option value="">Seleccionar...</option>
+            <option value="Salud">&#x1F3E5; Salud</option>
+            <option value="Educaci&#243;n">&#x1F4DA; Educaci&#243;n</option>
+            <option value="Log&#237;stica">&#x1F69A; Log&#237;stica</option>
+            <option value="Fintech">&#x1F4B3; Fintech</option>
+            <option value="Retail">&#x1F6CD;&#xFE0F; Retail</option>
+            <option value="Agricultura">&#x1F33E; Agricultura</option>
+            <option value="Turismo">&#x2708;&#xFE0F; Turismo</option>
+            <option value="Energ&#237;a">&#x26A1; Energ&#237;a</option>
+            <option value="Construcci&#243;n">&#x1F3D7;&#xFE0F; Construcci&#243;n</option>
+            <option value="Otro">&#x1F4A1; Otro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Potencial de negocio *</label>
+          <select id="fpotential" class="form-select" required>
+            <option value="">Seleccionar...</option>
+            <option value="Alto">&#x1F7E2; Alto</option>
+            <option value="Medio">&#x1F7E1; Medio</option>
+            <option value="Bajo">&#x26AB; Bajo</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <button type="submit" class="btn-submit" id="btnSubmit">&#x2728; Publicar oportunidad</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const SUPABASE_URL  = 'https://xjljigteuxrqegkaudnc.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqbGppZ3RldXhycWVna2F1ZG5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyMTEwMDksImV4cCI6MjEwNjc4NzAwOX0.48oAqgUAAOV6gv3ewvkm6WtaXHoK2e02SBPvMIgg4nE';
+  const HEADERS = {
+    'apikey':        SUPABASE_ANON,
+    'Authorization': 'Bearer ' + SUPABASE_ANON,
+    'Content-Type':  'application/json',
+    'Prefer':        'return=representation'
+  };
+
+  let allOpportunities = [];
+
+  async function fetchOpportunities() {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/opportunities?order=created_at.desc&select=*', { headers: HEADERS });
+    if (!res.ok) throw new Error('Error ' + res.status);
+    return res.json();
+  }
+
+  async function insertOpportunity(data) {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/opportunities', {
+      method: 'POST', headers: HEADERS, body: JSON.stringify(data)
+    });
+    if (!res.ok) { const e = await res.text(); throw new Error(e); }
+    return res.json();
+  }
+
+  async function updateLikes(id, newLikes) {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/opportunities?id=eq.' + id, {
+      method: 'PATCH', headers: HEADERS, body: JSON.stringify({ likes: newLikes })
+    });
+    if (!res.ok) throw new Error('Error ' + res.status);
+  }
+
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function getPotentialClass(p) {
+    if (!p) return 'bajo';
+    const v = p.toLowerCase();
+    return v === 'alto' ? 'alto' : v === 'medio' ? 'medio' : 'bajo';
+  }
+
+  function categoryEmoji(c) {
+    const map = {
+      'Salud':'&#x1F3E5;','Educaci\u00f3n':'&#x1F4DA;','Log\u00edstica':'&#x1F69A;',
+      'Fintech':'&#x1F4B3;','Retail':'&#x1F6CD;&#xFE0F;','Agricultura':'&#x1F33E;',
+      'Turismo':'&#x2708;&#xFE0F;','Energ\u00eda':'&#x26A1;','Construcci\u00f3n':'&#x1F3D7;&#xFE0F;','Otro':'&#x1F4A1;'
+    };
+    return (map[c] || '&#x1F4A1;') + ' ' + escHtml(c || 'Otro');
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '';
+    return new Date(iso).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  function renderCard(op, idx) {
+    const pc = getPotentialClass(op.potential);
+    return '<div class="card" style="animation-delay:' + (idx * 0.05) + 's" id="card-' + op.id + '">' +
+      '<div class="card-header">' +
+        '<div>' +
+          '<div class="card-name">' + escHtml(op.name) + '</div>' +
+          '<div class="card-location">&#x1F4CD; ' + escHtml(op.city) + ', ' + escHtml(op.country) + '</div>' +
+        '</div>' +
+        '<div class="category-badge">' + categoryEmoji(op.category) + '</div>' +
+      '</div>' +
+      '<div class="card-section">' +
+        '<div class="card-section-label">&#x1F534; Problema</div>' +
+        '<div class="card-section-text">' + escHtml(op.problem) + '</div>' +
+      '</div>' +
+      '<div class="card-section">' +
+        '<div class="card-section-label">&#x1F916; Soluci\u00f3n con IA</div>' +
+        '<div class="ai-solution-text">' + escHtml(op.ai_solution) + '</div>' +
+      '</div>' +
+      '<div class="card-footer">' +
+        '<div>' +
+          '<div class="potential-badge ' + pc + '"><div class="potential-dot"></div>Potencial ' + escHtml(op.potential || 'Bajo') + '</div>' +
+          '<div class="card-date">' + formatDate(op.created_at) + '</div>' +
+        '</div>' +
+        '<button class="btn-like" id="like-' + op.id + '" onclick="handleLike(\'' + op.id + '\',' + (op.likes||0) + ')">' +
+          '<span class="like-heart">&#x2764;&#xFE0F;</span>' +
+          '<span id="likes-count-' + op.id + '">' + (op.likes||0) + '</span>' +
+        '</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderGrid(data) {
+    const grid = document.getElementById('cardsGrid');
+    document.getElementById('countBadge').textContent = data.length + ' resultado' + (data.length !== 1 ? 's' : '');
+    if (!data || data.length === 0) {
+      grid.innerHTML = '<div class="empty-state"><div class="empty-icon">&#x1F30D;</div><p>A\u00fan no hay oportunidades. \u00a1S\u00e9 el primero!</p></div>';
+      return;
+    }
+    grid.innerHTML = data.map((op, i) => renderCard(op, i)).join('');
+  }
+
+  function updateStats(data) {
+    document.getElementById('totalCount').textContent  = data.length;
+    document.getElementById('totalLikes').textContent  = data.reduce((s, o) => s + (o.likes||0), 0);
+    document.getElementById('totalCities').textContent = new Set(data.map(o => (o.city||'').toLowerCase()).filter(Boolean)).size;
+  }
+
+  async function loadOpportunities() {
+    document.getElementById('cardsGrid').innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+    try {
+      allOpportunities = await fetchOpportunities();
+      updateStats(allOpportunities);
+      applyFilters();
+    } catch(e) {
+      document.getElementById('cardsGrid').innerHTML = '<div class="empty-state"><div class="empty-icon">&#x26A0;&#xFE0F;</div><p>Error: ' + escHtml(e.message) + '</p></div>';
+      showToast('Error al conectar con Supabase', 'error');
+    }
+  }
+
+  function applyFilters() {
+    const city     = document.getElementById('filterCity').value.trim().toLowerCase();
+    const country  = document.getElementById('filterCountry').value.trim().toLowerCase();
+    const category = document.getElementById('filterCategory').value;
+    const filtered = allOpportunities.filter(op => {
+      if (city     && !(op.city||'').toLowerCase().includes(city))       return false;
+      if (country  && !(op.country||'').toLowerCase().includes(country)) return false;
+      if (category && op.category !== category)                          return false;
+      return true;
+    });
+    renderGrid(filtered);
+  }
+
+  function clearFilters() {
+    document.getElementById('filterCity').value = '';
+    document.getElementById('filterCountry').value = '';
+    document.getElementById('filterCategory').value = '';
+    applyFilters();
+  }
+
+  async function handleLike(id, currentLikes) {
+    const btn = document.getElementById('like-' + id);
+    if (btn.classList.contains('liked') || btn.disabled) return;
+    btn.disabled = true;
+    const newLikes = currentLikes + 1;
+    try {
+      await updateLikes(id, newLikes);
+      btn.classList.add('liked');
+      document.getElementById('likes-count-' + id).textContent = newLikes;
+      const op = allOpportunities.find(o => o.id === id);
+      if (op) op.likes = newLikes;
+      updateStats(allOpportunities);
+      showToast('&#x2764;&#xFE0F; \u00a1Like registrado!', 'success');
+    } catch(e) {
+      showToast('Error al dar like', 'error');
+      btn.disabled = false;
+    }
+  }
+
+  function openModal()  { document.getElementById('modalOverlay').classList.add('active'); document.body.style.overflow = 'hidden'; }
+  function closeModal() { document.getElementById('modalOverlay').classList.remove('active'); document.body.style.overflow = ''; }
+  function handleOverlayClick(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+
+  async function submitOpportunity(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSubmit');
+    btn.disabled = true; btn.textContent = 'Publicando...';
+    const payload = {
+      name:        document.getElementById('fname').value.trim(),
+      city:        document.getElementById('fcity').value.trim(),
+      country:     document.getElementById('fcountry').value.trim(),
+      problem:     document.getElementById('fproblem').value.trim(),
+      ai_solution: document.getElementById('fsolution').value.trim(),
+      category:    document.getElementById('fcategory').value,
+      potential:   document.getElementById('fpotential').value,
+      likes: 0
+    };
+    try {
+      await insertOpportunity(payload);
+      document.getElementById('opportunityForm').reset();
+      closeModal();
+      showToast('\u2705 \u00a1Oportunidad publicada!', 'success');
+      await loadOpportunities();
+    } catch(e) {
+      showToast('Error: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = '\u2728 Publicar oportunidad';
+    }
+  }
+
+  let toastTimer;
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.innerHTML = msg; t.className = 'toast ' + (type||'success') + ' show';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.className = 'toast'; }, 3200);
+  }
+
+  loadOpportunities();
+</script>
+</body>
+</html>
